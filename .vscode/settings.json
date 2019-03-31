@@ -1,0 +1,8 @@
+{
+    "latex-workshop.latex.external.build.command": {
+        "command": "make",
+        //"args":[]
+        "args":["-C", "tex"]
+    },
+    "latex-workshop.latex.outDir": "/home/moritz/projects/wia-paper/result"
+}

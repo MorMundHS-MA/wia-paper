@@ -28,7 +28,7 @@
 }
 
 @InProceedings{8574600,
-  author    = {V. {Kiriansky} and I. {Lebedev} and S. {Amarasinghe} and S. {Devadas} and J. {Emer}@article{bernstein2005cache, title={Cache-timing attacks on AES}, author={Bernstein, Daniel J}, year={2005} }},
+  author    = {V. {Kiriansky} and I. {Lebedev} and S. {Amarasinghe} and S. {Devadas} and J. {Emer}},
   title     = {DAWG: A Defense Against Cache Timing Attacks in Speculative Execution Processors},
   booktitle = {2018 51st Annual IEEE/ACM International Symposium on Microarchitecture (MICRO)},
   year      = {2018},
@@ -49,14 +49,6 @@
   title   = {Sgxpectre attacks: Leaking enclave secrets via speculative execution},
   journal = {arXiv preprint arXiv:1802.09085},
   year    = {2018},
-}
-
-@Online{,
-  author    = {Jonas Depoix and Philipp Altmeyer},
-  title     = {Detecting Spectre Attacks by identifying Cache Side-ChannelAttacks using Machine Learning},
-  year      = {2018},
-  url       = {https://www.betriebssysteme.org/wp-content/uploads/2018/10/WAMOS_2018_paper_12.pdf},
-  timestamp = {2019/03/31},
 }
 
 @inproceedings{Lowe-Power:2018:PPC:3214292.3214300,
@@ -122,4 +114,37 @@ doi={10.1109/ICSENG.2018.8638178},
 ISSN={},
 month={Dec},}
 
+@article{DBLP:journals/corr/abs-1902-05178,
+ author    = {Ross McIlroy and
+               Jaroslav Sevc{\'{\i}}k and
+               Tobias Tebbi and
+               Ben L. Titzer and
+               Toon Verwaest},
+ title     = {Spectre is here to stay: An analysis of side-channels and speculative
+               execution},
+ journal   = {CoRR},
+ volume    = {abs/1902.05178},
+ year      = {2019},
+ url       = {http://arxiv.org/abs/1902.05178},
+ archivePrefix = {arXiv},
+ eprint    = {1902.05178},
+ timestamp = {Sat, 02 Mar 2019 16:35:38 +0100},
+ biburl    = {https://dblp.org/rec/bib/journals/corr/abs-1902-05178},
+ bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@Online{docker,
+ title     = {OverlayFS and Docker Performance: Shared Memory},
+ year      = {2019},
+ url       = {https://docs.docker.com/storage/storagedriver/overlayfs-driver/#overlayfs-and-docker-performance},
+ timestamp = {2019/04/03}
+}
+
+@Online{depoix2018,
+ author    = {Jonas Depoix and Philipp Altmeyer},
+ title     = {Detecting Spectre Attacks by identifying Cache Side-ChannelAttacks using Machine Learning},
+ year      = {2018},
+ url       = {https://www.betriebssysteme.org/wp-content/uploads/2018/10/WAMOS_2018_paper_12.pdf},
+ timestamp = {2019/03/31},
+}
 @Comment{jabref-meta: databaseType:biblatex;}

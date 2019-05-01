@@ -44,19 +44,6 @@
 % Unterunterabschnitte mit \subsubsection
 % -------------------------------------------------------
 \section{Einleitung}
-\cite{8457887}
-\cite{8547554}
-\cite{8574600}
-\cite{8638178}
-\cite{DBLP:journals/corr/abs-1902-05178}
-\cite{Ge:2018:NSW:3265723.3265724}
-\cite{kocher2018spectre}
-\cite{lipp2018meltdown}
-\cite{Lowe-Power:2018:PPC:3214292.3214300}
-\cite{bernstein2005cache}
-\cite{chen2018sgxpectre}
-\cite{depoix2018}
-\cite{docker}
 
 % -------------------------------------------------------
 \section{Modern computation hardware and infrastructure}
@@ -72,15 +59,27 @@ is handled by the processors instruction pipeline. This has resulted in higher p
 required for an instruction to complete execution. However since programs use conditional branches and loops these long pipeline can become invalid because the cpu
 cannot know the destination of a conditional jump without first evaluating the condition. This results in a pipeline flush that wastes valuable execution time while
 the pipeline is refilled. To mitigate the impact of this issue the processor can store previous outcomes of branches and use this to predict future executions of the
-branch. With branch prediction only a miss-prediction will result in a pipeline flush. To further increase performance the cpu runs the instruction of 
-the predicted branch and either commits the results if the prediction was correct or discards them if was not. 
+branch. With branch prediction only a miss-prediction will result in a pipeline flush. To further increase performance the cpu runs the instruction of
+the predicted branch and either commits the results if the prediction was correct or discards them if was not.
 This process is called speculative execution. \cite{kocher2018spectre}
 \subsection{Virtual and shared memory}
 
 \subsection{Docker}
-* Server Applications require clean and consistent runtime environments
-* Monolithic server applications are hard to maintain -> Micro-services
-* Using separate vms for each services -> too much overhead through redundant OSs
+\subsubsection{Containerization concept}
+Docker allows isolation of processes in containers. These containers provide the process with its own virtual filesystem and network and also hides other processes
+running on the host. This means containers only share the hosts kernel which stands in contrast with classical VMs which have to run a separate OS for each virtual
+machine. To create a container an image is used. The image contains all required files and serves as a \enquote{blueprint} for the container. Due to the lightweight
+nature of containers it possible and best practice to isolate every application in its own container. For example a classic LAMP stack would be use a MySQL
+and an Apache container. This has multiple benefits. Developers can build and test container images on their own machine which will behave
+identical when run on a production server. Docker also allows easy horizontal scaling of applications. The LAMP stack created before could be extended by
+creating an additional Apache container and an nginx container to load balance between the two Apache servers.
+\subsubsection{File-system layers}
+To reduce redundancy between docker images and improve performance images are divided into layers. For example an Apache PHP application would consist of 3
+major layers. The first contains a minimal debian image providing basic libraries and tools. The second layer contains Apache and its dependencies. The final
+layer would then have a copy of the applications php source files. When a container is started from this image, the layers are stacked on top of each other 
+using a union filesystem like OverlayFS\cite{overlayfs}. Whenever the application attempts to read a file the kernel checks each layer from top to bottom
+returning the first result. This allows overriding of files on lower layers. Docker also adds a final non-persistent layer to the container which applications
+running inside can use to write files.
 \subsection{Cloud}
 
 

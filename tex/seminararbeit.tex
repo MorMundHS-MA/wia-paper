@@ -64,14 +64,16 @@
 * Caches
 \subsection{Processor pipelines and speculative execution}
 Since the turn of the millennium clock speeds of high performance CPUs have stagnated because the increased energy consumption and resulting heat generation became
-too costly. \cite{fog2012microarchitecture} Multi-core architectures became common however even today many, if not most, workloads rely heavily on single thread performance.
-Therefore to increase the speed of single thread execution, without increasing the clock speed, more instructions have to be executed in a single cycle. 
-To achieve this goal many techniques like instruction splitting and fusion, and simultaneous instruction execution are used \cite{fog2012microarchitecture}.
-These optimizations require more complex processing of the instruction stream which is handled by the processors instruction pipeline. This has resulted in higher pipeline memory requirements
-as well as a longer pipelines in terms of clock cycles required for an instruction to complete execution. However since programs use conditional branches and loops this long pipeline can become invalid 
-because the cpu cannot know the destination of a conditional jump without first evaluating the condition. This results in a pipeline flush that wastes valuable execution time while the pipeline is refilled.
-To mitigate the impact of this issue the processor can store previous outcomes of branches and use this to predict future executions of the branch. With branch prediction only a miss-prediction will result
-in a pipeline flush. To further increase performance the cpu runs the instruction of the predicted branch and either commits the results if the prediction was correct or discards them if was not. 
+too costly. \cite{fog2012microarchitecture} Multi-core architectures became common however even today many, if not most,
+workloads rely heavily on single thread performance. Therefore to increase the speed of single thread execution, without increasing the clock speed,
+more instructions have to be executed in a single cycle. To achieve this goal many techniques like instruction splitting and fusion,
+and simultaneous instruction execution are used \cite{fog2012microarchitecture}. These optimizations require more complex processing of the instruction stream which
+is handled by the processors instruction pipeline. This has resulted in higher pipeline memory requirements as well as a longer pipelines in terms of clock cycles
+required for an instruction to complete execution. However since programs use conditional branches and loops these long pipeline can become invalid because the cpu
+cannot know the destination of a conditional jump without first evaluating the condition. This results in a pipeline flush that wastes valuable execution time while
+the pipeline is refilled. To mitigate the impact of this issue the processor can store previous outcomes of branches and use this to predict future executions of the
+branch. With branch prediction only a miss-prediction will result in a pipeline flush. To further increase performance the cpu runs the instruction of 
+the predicted branch and either commits the results if the prediction was correct or discards them if was not. 
 This process is called speculative execution. \cite{kocher2018spectre}
 \subsection{Virtual and shared memory}
 

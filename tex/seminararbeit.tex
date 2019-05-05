@@ -81,15 +81,26 @@ using a union filesystem like OverlayFS\cite{overlayfs}. Whenever the applicatio
 returning the first result. This allows overriding of files on lower layers. Docker also adds a final non-persistent layer to the container which applications
 running inside can use to write files.
 \subsection{Cloud}
-
+* Importance of cloud
+* shared resources
 
 % -------------------------------------------------------
 \section{Spectre}
-
 \subsection{Side-channels}
-
+Computer programs can, on an abstract level, be described with the input-process-output(IPO) model. An input will produce an output defined by the algorithms
+of the program. This output is deterministic, meaning input a will always result in output b. However in real life systems processes can produce additional outputs
+which are not intended by its programmer. For example a program which calculates the factorial of a number takes longer proportional to the input number.
+An attacker could therefore infer the input number from the execution time without knowing the result. More complex Timing-attacks have been used to
+extract private keys or other secrets of various cryptographic algorithms. \cite{bernstein2005cache}\cite{kocher1996timing}
+Similarly even a systems power consumption can be used as a side-channel to retrieve secret data. \cite{kocher1999differential} 
+While these two side-channels can add unintended output to a process they are within the programmers control. Execution time can be increased arbitrarily through
+idling or sleeping and the system's power consumption can be increased by running pointless code. Other side-channels however are completely outside of the 
+control of the programmer. For example a program has very limited or no direct control over the systems cache state or which ALU will compute a calculation.
 \subsection{Exploiting speculative execution}
-
+* Predictor is miss-trained by attacker process
+* Victims next execution results in a miss-predict
+* speculative execution of incorrect branch leaks information, usually through cache state
+* Attacker extracts side-channel and repeats attack to gather further information
 % -------------------------------------------------------
 \section{Spectre in shared cloud infrastructure}
 

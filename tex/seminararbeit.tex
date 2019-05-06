@@ -92,15 +92,21 @@ of the program. This output is deterministic, meaning input a will always result
 which are not intended by its programmer. For example a program which calculates the factorial of a number takes longer proportional to the input number.
 An attacker could therefore infer the input number from the execution time without knowing the result. More complex Timing-attacks have been used to
 extract private keys or other secrets of various cryptographic algorithms. \cite{bernstein2005cache}\cite{kocher1996timing}
-Similarly even a systems power consumption can be used as a side-channel to retrieve secret data. \cite{kocher1999differential} 
+Similarly even a systems power consumption can be used as a side-channel to retrieve secret data. \cite{kocher1999differential}
 While these two side-channels can add unintended output to a process they are within the programmers control. Execution time can be increased arbitrarily through
-idling or sleeping and the system's power consumption can be increased by running pointless code. Other side-channels however are completely outside of the 
+idling or sleeping and the system's power consumption can be increased by running pointless code. Other side-channels however are completely outside of the
 control of the programmer. For example a program has very limited or no direct control over the systems cache state or which ALU will compute a calculation.
 \subsection{Exploiting speculative execution}
-* Predictor is miss-trained by attacker process
-* Victims next execution results in a miss-predict
-* speculative execution of incorrect branch leaks information, usually through cache state
-* Attacker extracts side-channel and repeats attack to gather further information
+To execute a spectre attack the attacker first has to find a vulnerable instruction sequence in the victim program. The sequence will leak secret data into the chosen
+side-channel during speculative execution. Therefore spectre-style attacks can be differentiated from each other by the how speculative execution is achieved
+and what side-channel is used. \cite{kocher2018spectre} Variant 1 example of the original spectre attack uses conditional branches to achieve speculative
+execution and leaks data through the processors cache state. The conditional branch is an array bounds check \lstinline|if (x < array1_size)|. The branch prediction
+can be miss-trained by repeatedly calling the victim function with an inbounds \lstinline|x|. Then the attacker flushes \lstinline|array1_size| from the processors
+cache and calls the victim function again. This causes the branch to be execute speculatively until \lstinline|array1_size| is retrieved from memory. To leak
+the victims secret the attacker chooses an \lstinline|x| that is out of bounds. The victim now to reads from \lstinline|array1| using the malicious, out-of-bounds
+address. Next the victim uses the result to access a second array. This causes the processor to load a memory address into the cache which is based of the early
+out-of-bounds access of \lstinline|array[x]|. The attacker can now time its access of the possible memory addresses revealing which address can be read fastest and
+was therefore retrieve by the victims speculative execution, revealing the (secret) value of \lstinline|array[x]|.
 % -------------------------------------------------------
 \section{Spectre in shared cloud infrastructure}
 

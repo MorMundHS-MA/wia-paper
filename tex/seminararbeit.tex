@@ -120,7 +120,8 @@ found in the future could still allow cross VM attacks in the cloud. \\
 In a public cloud an adversary is faced with another hurdle besides VM isolation. Because the IaaS provider allocates resources for the tenants based on the their
 requirements through a closed-source algorithm, an attacker can not directly force co-residency (share a hypervisor) with the victim.
 \textcite{Ristenpart:2009:HYG:1653662.1653687} demonstrated various networking based techniques to achieve co-residency in the early (2009) AWS cloud and while Amazon
-has improved security in this regard, other co-residency detection mechanisms have been found \cite{inci2015seriously}.
+has improved security in this regard, other co-residency detection mechanisms have been found \cite{inci2015seriously}. This newer method uses information leaks
+on the processor level, specifically through the last level cache shared between all CPU cores.
 \subsection{Shared Docker host}
 
 \subsection{FaaS -- Function as a Service}

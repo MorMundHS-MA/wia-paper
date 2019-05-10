@@ -110,7 +110,17 @@ speculative execution, revealing the (secret) value of \lstinline|array[x]|.
 \section{Spectre in shared cloud infrastructure}
 
 \subsection{Shared hypervisor}
-
+Infrastructure as a Service (IaaS) providers give their customers, here referred to as tenants, the ability to rent virtual machines. The tenant has full access
+to this VM (root access). Since most applications do not require the full capabilities of the physical server, multiple VMs are run on a hypervisor such as VMware
+ESXi or Linux's KVM. This results in the sharing of physical resources like RAM and CPU cores between tenants. This isolation is hardware enforced
+and hypervisor exploits are quite rare (only 5 ESXi vulnerabilities in 2018 with a score $\ge$ 5) \cite{esxiVulnerabilities}. However, since speculative execution can
+circumvent hardware enforced checks, some Spectre vulnerabilities allowed an attacker to read the memory of another tenants VMs and the hypervisor
+itself \cite{vmwareSpectre, vmwareSpectreNG}. While the currently known Spectre attacks have been mitigated by hypervisor patches, speculative execution exploits
+found in the future could still allow cross VM attacks in the cloud. \\
+In a public cloud an adversary is faced with another hurdle besides VM isolation. Because the IaaS provider allocates resources for the tenants based on the their
+requirements through a closed-source algorithm, an attacker can not directly force co-residency (share a hypervisor) with the victim.
+\textcite{Ristenpart:2009:HYG:1653662.1653687} demonstrated various networking based techniques to achieve co-residency in the early (2009) AWS cloud and while Amazon
+has improved security in this regard, other co-residency detection mechanisms have been found \cite{inci2015seriously}.
 \subsection{Shared Docker host}
 
 \subsection{FaaS -- Function as a Service}

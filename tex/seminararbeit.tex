@@ -50,39 +50,37 @@
 \subsection{Memory management}
 * Caches
 \subsection{Processor pipelines and speculative execution}
-Since the turn of the millennium clock speeds of high performance CPUs have stagnated because the increased energy consumption and resulting heat generation became
-too costly. \cite{fog2012microarchitecture} Multi-core architectures became common however even today many, if not most,
+Since the turn of the millennium, clock speeds of high performance CPU's have stagnated because the increased energy consumption and resulting heat generation got
+too high. \cite{fog2012microarchitecture} Multi-core architectures became common however even today many, if not most,
 workloads rely heavily on single thread performance. Therefore to increase the speed of single thread execution, without increasing the clock speed,
-more instructions have to be executed in a single cycle. To achieve this goal many techniques like instruction splitting and fusion,
+more instructions have to be executed in a single cycle. To achieve this goal many techniques like instruction splitting, fusion,
 and simultaneous instruction execution are used \cite{fog2012microarchitecture}. These optimizations require more complex processing of the instruction stream which
 is handled by the processors instruction pipeline. This has resulted in higher pipeline memory requirements as well as a longer pipelines in terms of clock cycles
-required for an instruction to complete execution. However since programs use conditional branches and loops these long pipeline can become invalid because the cpu
+required for an instruction to complete execution. However since programs use conditional branches and loops these long pipeline can become invalid because the CPU
 cannot know the destination of a conditional jump without first evaluating the condition. This results in a pipeline flush that wastes valuable execution time while
 the pipeline is refilled. To mitigate the impact of this issue the processor can store previous outcomes of branches and use this to predict future executions of the
-branch. With branch prediction only a miss-prediction will result in a pipeline flush. To further increase performance the cpu runs the instruction of
-the predicted branch and either commits the results if the prediction was correct or discards them if was not.
+branch. With branch prediction only a miss-prediction will result in a pipeline flush. The CPU runs the instruction of the predicted branch and either commits
+the results if the prediction was correct or discards them if was not.
 This process is called speculative execution. \cite{kocher2018spectre}
 \subsection{Virtual and shared memory}
 
 \subsection{Docker}
-\subsubsection{Containerization concept}
-Docker allows isolation of processes in containers. These containers provide the process with its own virtual filesystem and network and also hides other processes
-running on the host. This means containers only share the hosts kernel which stands in contrast with classical VMs which have to run a separate OS for each virtual
+\subsubsection*{Containerization concept}
+Docker allows isolation of processes in containers. These containers hide other processes running on the host and provide the process with its own virtual filesystem
+and network. This means containers only share the hosts kernel which stands in contrast with classical VMs which have to run a separate OS for each virtual
 machine. To create a container an image is used. The image contains all required files and serves as a \enquote{blueprint} for the container. Due to the lightweight
 nature of containers it possible and best practice to isolate every application in its own container. For example a classic LAMP stack would be use a MySQL
 and an Apache container. This has multiple benefits. Developers can build and test container images on their own machine which will behave
 identical when run on a production server. Docker also allows easy horizontal scaling of applications. The LAMP stack created before could be extended by
 creating an additional Apache container and an nginx container to load balance between the two Apache servers.
-\subsubsection{File-system layers}
-To reduce redundancy between docker images and improve performance images are divided into layers. For example an Apache PHP application would consist of 3
+\subsubsection*{File-system layers}
+To reduce redundancy docker images are divided into layers. For example an Apache PHP application would consist of 3
 major layers. The first contains a minimal debian image providing basic libraries and tools. The second layer contains Apache and its dependencies. The final
-layer would then have a copy of the applications php source files. When a container is started from this image, the layers are stacked on top of each other 
+layer would then have a copy of the applications php source files. When a container is started from this image, the layers are stacked on top of each other
 using a union filesystem like OverlayFS\cite{overlayfs}. Whenever the application attempts to read a file the kernel checks each layer from top to bottom
-returning the first result. This allows overriding of files on lower layers. Docker also adds a final non-persistent layer to the container which applications
-running inside can use to write files.
+returning the first result. This allows overriding of files on lower layers. Docker also adds a final non-persistent layer to the container which the application
+running inside uses to write files.
 \subsection{Cloud}
-* Importance of cloud
-* shared resources
 
 % -------------------------------------------------------
 \section{Spectre}
@@ -90,23 +88,24 @@ running inside can use to write files.
 Computer programs can, on an abstract level, be described with the input-process-output(IPO) model. An input will produce an output defined by the algorithms
 of the program. This output is deterministic, meaning input a will always result in output b. However in real life systems processes can produce additional outputs
 which are not intended by its programmer. For example a program which calculates the factorial of a number takes longer proportional to the input number.
-An attacker could therefore infer the input number from the execution time without knowing the result. More complex Timing-attacks have been used to
+An attacker could therefore infer the input number from the execution time without knowing the result. More complex timing-attacks have been used to
 extract private keys or other secrets of various cryptographic algorithms. \cite{bernstein2005cache}\cite{kocher1996timing}
 Similarly even a systems power consumption can be used as a side-channel to retrieve secret data. \cite{kocher1999differential}
 While these two side-channels can add unintended output to a process they are within the programmers control. Execution time can be increased arbitrarily through
 idling or sleeping and the system's power consumption can be increased by running pointless code. Other side-channels however are completely outside of the
 control of the programmer. For example a program has very limited or no direct control over the systems cache state or which ALU will compute a calculation.
 \subsection{Exploiting speculative execution}
-To execute a spectre attack the attacker first has to find a vulnerable instruction sequence in the victim program. The sequence will leak secret data into the chosen
+To execute a spectre exploit the attacker first has to find a vulnerable instruction sequence in the victim program. The sequence will leak secret data into the chosen
 side-channel during speculative execution. Therefore spectre-style attacks can be differentiated from each other by the how speculative execution is achieved
-and what side-channel is used. \cite{kocher2018spectre} Variant 1 example of the original spectre attack uses conditional branches to achieve speculative
+and what side-channel is used. \cite{kocher2018spectre} The example of Variant 1 of the original spectre attack uses conditional branches to achieve speculative
 execution and leaks data through the processors cache state. The conditional branch is an array bounds check \lstinline|if (x < array1_size)|. The branch prediction
-can be miss-trained by repeatedly calling the victim function with an inbounds \lstinline|x|. Then the attacker flushes \lstinline|array1_size| from the processors
-cache and calls the victim function again. This causes the branch to be execute speculatively until \lstinline|array1_size| is retrieved from memory. To leak
-the victims secret the attacker chooses an \lstinline|x| that is out of bounds. The victim now to reads from \lstinline|array1| using the malicious, out-of-bounds
-address. Next the victim uses the result to access a second array. This causes the processor to load a memory address into the cache which is based of the early
-out-of-bounds access of \lstinline|array[x]|. The attacker can now time its access of the possible memory addresses revealing which address can be read fastest and
-was therefore retrieve by the victims speculative execution, revealing the (secret) value of \lstinline|array[x]|.
+can be miss-trained by repeatedly calling the victim function with an in-bounds \lstinline|x| causing it to predict the branch as true in the future. Then the
+attacker flushes \lstinline|array1_size| from the processors cache and calls the victim function again. This causes the branch to be execute speculatively
+until \lstinline|array1_size| is retrieved from memory. To leak the victims secret the attacker chooses an \lstinline|x| that is out of bounds. The victim
+now reads from \lstinline|array1| using the malicious, out-of-bounds address. To successfully execute the attack sequence the victim also has to use the result to
+access a second array. This causes the processor to load a memory address into the cache which is based of the previous out-of-bounds access of \lstinline|array[x]|.
+The attacker can now time their own access of the possible memory addresses revealing which address can be read fastest and was therefore retrieved by the victims
+speculative execution, revealing the (secret) value of \lstinline|array[x]|.
 % -------------------------------------------------------
 \section{Spectre in shared cloud infrastructure}
 

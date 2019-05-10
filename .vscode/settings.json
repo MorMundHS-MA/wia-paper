@@ -4,5 +4,6 @@
         //"args":[]
         "args":["-C", "tex"]
     },
-    "latex-workshop.latex.outDir": "/home/moritz/projects/wia-paper/result"
+    "latex-workshop.latex.outDir": "/home/moritz/projects/wia-paper/result",
+    "editor.wordWrap": "on"
 }

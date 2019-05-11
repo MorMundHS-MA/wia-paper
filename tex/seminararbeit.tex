@@ -123,9 +123,29 @@ requirements through a closed-source algorithm, an attacker can not directly for
 has improved security in this regard, other co-residency detection mechanisms have been found \cite{inci2015seriously}. This newer method uses information leaks
 on the processor level, specifically through the last level cache shared between all CPU cores.
 \subsection{Shared Docker host}
-
+Running docker containers in the cloud can have benefits for both the customer and the cloud provider. The customer does not have to worry about OS security updates and
+can more easily scale their application. The cloud provider can, in theory, increase utilization of their hardware because of the reduced overhead. However, leveraging
+these benefits requires faith in the process isolation provided by Docker and the Linux kernel. Because of this the Azure and AWS public cloud isolate containers using
+hypervisor technology, only sharing kernels between containers of the same user defined application group \cite{fargateIsolation, azureIsolation}. Due to this the
+potential price advantage is lost. The smallest possible AWS Fargate task configuration (0.25 vCPU and 0.5 GB RAM) costs 0.01234 USD per hour\cite{fargatePricing}
+while the EC2 t3.micro VM (2 vCPU and 1 GB RAM) only costs 0.0104 USD per hour \cite{ec2Pricing}. Other Platform as a Service (PaaS) providers like
+Heroku\cite{herokuIsolation}, OpenShift\cite{openshiftIsolation} and the defunct DotCloud however do not use the additional isolation provided
+by hypervisor virtualization\cite{zhang2014cross}. These providers do refer to various \enquote{docker hardening} techniques, however specifics like the usage of
+shared libraries between containers are not mentioned, which can provide attack surface area for Spectre exploits\cite{retpolineTurner}.
 \subsection{FaaS -- Function as a Service}
-
+FaaS further abstracts service infrastructure. Conceptually a developer writes a function, uploads it to the FaaS service and connects events like HTTP requests or
+database events as an input source. When an event occurs the function is called with the event's parameters and, in the case of an HTTP request, builds and
+returns a API response. The benefits are automatic scaling and a payment model where the customer only pays for the functions execution time. In reality a
+\enquote{function} is a package of code, configuration and module/library files. Therefore even if the service for example only allows Node.JS execution this cannot
+be considered a security feature as a node module can contain native, compiled binary files\cite{lambdaFaq}. \\
+Due to the high abstraction level, internal implementation details are sparsely documented. AWS Lambda notes that Lambda functions are isolated using EC2 techniques, i.e.
+hypervisor isolation\cite{lambdaFaq}. Google cloud functions (GCF) in contrast only states that functions are run in
+\enquote{its own isolated secure execution context}\cite{cloudFunc}. \textcite{wang2018peeking} further investigates FaaS implementations. \\
+If a FaaS would only use docker to isolate functions of different customers, the risk of a speculative attack would be higher compared to a docker PaaS provider. Since
+function are based on small number of available runtime environments (e.g.\ GCF: Go, Python and Node.js 6,8,10 \cite{cloudFunc}) an attacker has implicit knowledge
+about the victims shared library and executable files. Therefore, an attacker could not only attempt co-residency to gain access to a specific target's secrets, but instead
+mount a broader attack acquiring data from random other tenants. Similar to spam phishing emails the goal would not be one large \enquote{heist} but instead gaining
+value from many smaller thefts.
 % -------------------------------------------------------
 \section{Prevention and detection}
 \subsection{In-memory encryption}

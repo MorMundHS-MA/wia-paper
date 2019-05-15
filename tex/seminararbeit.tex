@@ -162,8 +162,24 @@ other tenants. Similar to spam phishing emails the goal would not be one large \
 % -------------------------------------------------------
 \section{Prevention and detection}
 \subsection{In-memory encryption}
+To prevent a Spectre attack from accessing secret data, the data could be encrypted in-memory. This technique however, has two weaknesses. The first issue arises from the
+fact that to make use of the encrypted data the process has to, albeit briefly, decrypt the data. This results in the data still being vulnerable, but reduces an attacker's
+window of opportunity to access the secret. \\
+The second issue stems from encryption key storage. Since the key itself has to be stored in-memory for encryption/decryption it could be stolen together with the
+encrypted data. \\
+In a shared kernel environment, e.g.\  Docker, the key can be hidden completely from the attacker by storing it outside of the victims address space. This is due to
+the limitation of Spectre, that an attack can only access memory the victim has permission to. \cite{kocher2018spectre} \\
+Therefore, when a program uses functionality like Windows' \lstinline|CryptProtectMemory| \cite{winCryptMem} the key is stored in a different processes memory or even 
+kernel space memory. \\
+In the case of a cross VM attack in a hypervisor environment, the attacker gains access to all VM memory. This only raises the difficulty of the attack since the attacker 
+has to know the location of both the encrypted secret and the decryption key.
 \subsection{Heuristic detection}
-
+By using CPU caches as a side-channel a Spectre attack can create a distinctive cache usage pattern which could be used to detected on going attacks. \cite{depoix2018}
+This is due to Spectre deliberately causing cache misses to flush the cache or cause speculative execution by delaying memory access. Detection in this way has the
+benefit of being easy to deploy to existing system since no changes to vulnerable software is required. \cite{depoix2018, chiappetta2016real} \\
+However since Spectre does not rely on a specific side-channel for information access \cite{kocher2018spectre} detection could be circumvented. \textcite{gruss2016flush+} 
+even demonstrates a different cache side-channel that would not be detected by monitoring process cache-misses. \\
+Additionally by simply slowing down a Spectre attack it could also circumvent detection. \cite{chiappetta2016real}
 % --------------------------------------------------------------------
 \section*{Abkürzungen}
 \addcontentsline{toc}{section}{Abkürzungen}
@@ -172,12 +188,12 @@ other tenants. Similar to spam phishing emails the goal would not be one large \
 % bei \begin{acronym} geschrieben, um einen hässlichen
 % Umbruch zu verhindern
 % Sie müssen die Abkürzungen selbst alphabetisch sortieren!
-\begin{acronym}[IEEE]
-\acro{IaaS}{Infrastructure as a Service}
+\begin{acronym}[IaaS]
+\acro{ALU}{arithmetic logic unit}
 \acro{AWS}{Amazon Web Services}
 \acro{FaaS}{Function as a Service}
 \acro{GCF}{Google Cloud Functions}
-\acro{ALU}{arithmetic logic unit}
+\acro{IaaS}{Infrastructure as a Service}
 \acro{IPO}{input-process-output}
 \acro{PaaS}{Platform as a Service}
 \end{acronym}

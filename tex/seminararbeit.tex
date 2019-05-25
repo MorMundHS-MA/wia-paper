@@ -48,7 +48,15 @@
 % -------------------------------------------------------
 \section{Modern computation hardware and infrastructure}
 \subsection{Memory management}
-* Caches
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=8.5cm]{caches.png}
+\caption{The Intel Skylake cache hierarchy and access latencies\cite{fog2012microarchitecture}. Timings are calculated assuming a clock speed of 4 GHz for an Intel i7-6700 processor using DDR4-2400 RAM\cite{skylakeBenchmark}. }
+\label{caches}
+\end{figure}
+Since around 1980 memory performance has not been able to keep up with the ever increasing processor speeds. \cite[p.~73]{hennessy2011computer} Because of this accessing the main memory has become a very time consuming task. Modern processors therefore try to circumvent RAM access through the use of multiple cache layers (see. \autoref{caches}). These caches have a rather limited capacity especially the very fast L1 cache (Skylake i7-6700 L1 cache 2x32KB per core, L3 cache 8MB total). \cite{skylakeBenchmark} \\
+To optimize the usage of the available caches, various techniques are used. When code access a memory address, such as an array or string, it is very likely that addresses nearby will also be accessed (\emph{spatial locality}). Because of this memory is loaded into the caches in blocks to reduce cache misses in these cases. \cite[p.~74]{hennessy2011computer}. \\
+
 \subsection{Processor pipelines and speculative execution}
 Since the turn of the millennium, clock speeds of high performance CPU's have stagnated because the increased energy consumption and resulting heat generation got
 too high. \cite{fog2012microarchitecture} Multi-core architectures became common however even today many, if not most,
@@ -63,7 +71,15 @@ branch. With branch prediction only a miss-prediction will result in a pipeline 
 the results if the prediction was correct or discards them if was not.
 This process is called speculative execution. \cite{kocher2018spectre}
 \subsection{Virtual and shared memory}
-
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=8.5cm]{virtMem.png}
+\caption{Mapping of virtual memory to physical memory. }
+\label{virtmem}
+\end{figure}
+Running multiple programs in parallel is a operating system \enquote{feature} that has been the standard for around 30 years. Before that some operating systems would run only one program at a time or completely swap out the main memory when switching to a different running process. \cite{tanenbaum1997operating} This method is obviously not very efficient and handling many processes at once. Today, virtual memory is the primary way of managing memory. When using virtual memory every process has it own separate address space. This means two processes can store different data at the same address without being able to affect each other. \cite[p.~620]{hennessy2011computer}\\
+The virtual address space of each process is divided into memory blocks called pages (currently on x86 computers page size is 4kB). When a process accesses an address the virtual page address is translated by the \ac{MMU} to a physical page address or, when the page is not loaded into memory, gets loaded into memory by the OS. \\
+While virtual memory allows reuse of the same virtual address by multiple processes, it also allows sharing of physical memory between processes. This can be used for inter process communication and also as an optimization to share identical code between programs. Shared libraries are loaded once and can be reused by any program that uses the same library version. \cite{tanenbaum1997operating} To prevent programs from changing the library code for other programs, a copy on write mechanism is used. When a process attempts to write to a shared library page, it is copied in physical memory and the virtual address gets remapped to the copied version.
 \subsection{Docker}
 \subsubsection*{Containerization concept}
 Docker allows isolation of processes in containers. These containers hide other processes running on the host and provide the process with its own virtual filesystem
@@ -161,6 +177,8 @@ Therefore, an attacker could not only attempt co-residency to gain access to a s
 other tenants. Similar to spam phishing emails the goal would not be one large \enquote{heist} but instead gaining value from many smaller thefts.
 % -------------------------------------------------------
 \section{Prevention and detection}
+\subsection{Software/Compiler}
+\subsection{Hardware}
 \subsection{In-memory encryption}
 To prevent a Spectre attack from accessing secret data, the data could be encrypted in-memory. This technique however, has two weaknesses. The first issue arises from the
 fact that to make use of the encrypted data the process has to, albeit briefly, decrypt the data. This results in the data still being vulnerable, but reduces an attacker's
@@ -180,6 +198,13 @@ benefit of being easy to deploy to existing system since no changes to vulnerabl
 However since Spectre does not rely on a specific side-channel for information access \cite{kocher2018spectre} detection could be circumvented. \textcite{gruss2016flush+} 
 even demonstrates a different cache side-channel that would not be detected by monitoring process cache-misses. \\
 Additionally by simply slowing down a Spectre attack it could also circumvent detection. \cite{chiappetta2016real}
+\section{Conclusion}
+\begin{itemize}
+  \item Cloud providers should provide more transparent infrastructure documentation
+  \item Physical tenant isolation already available for high security applications
+  \item Spectre attacks are difficult, Software exploits are more common and should be of higher concern
+  \item Spectre increased awareness of side channel attacks, potential for slower, hardened processors alternatives
+\end{itemize}
 % --------------------------------------------------------------------
 \section*{Abkürzungen}
 \addcontentsline{toc}{section}{Abkürzungen}
@@ -195,6 +220,7 @@ Additionally by simply slowing down a Spectre attack it could also circumvent de
 \acro{GCF}{Google Cloud Functions}
 \acro{IaaS}{Infrastructure as a Service}
 \acro{IPO}{input-process-output}
+\acro{MMU}{memory management unit}
 \acro{PaaS}{Platform as a Service}
 \end{acronym}
 

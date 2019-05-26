@@ -18,8 +18,8 @@
 \author{
   \IEEEauthorblockN{\autoren}
   \IEEEauthorblockA{
-    Hochschule Mannheim\\
-    Fakultät für Informatik\\
+    Mannheim University of Applied Sciences\\
+    Department of Computer Science\\
     Paul-Wittsack-Str. 10,
     68163 Mannheim
     }
@@ -35,6 +35,9 @@
 
 % Kurze Zusammenfassung des Dokuments
 \begin{abstract}
+The processor flaws used in the Spectre and Meltdown attacks have had uncharacteristically large media impact even gaining coverage in main stream media. This is despite the fact that this type of exploit has not been used in any real attacks and is unlikely to target consumers, as simpler attack vectors still remain highly effective. However, because Spectre affects any processor which uses speculative execution with little hope for a \enquote{silver bullet} in the near future, Spectre seems to be here to stay. \\
+While Spectre might not very relevant to the consumer market, it is quite relevant where safety is usually paramount. The cloud promises cost reduction and safety through offloading maintenance and updating to gigantic providers like Amazons AWS. But how secure can the most up-to-date platform be if the used hardware is inherently flawed to the core? \\
+This paper shows potential attack vectors in a shared cloud environment, discusses some defensive measures and provides a high level explanation of the Spectre attack.
 \end{abstract}
 
 % Inhaltsverzeichnis erzeugen
@@ -43,7 +46,10 @@
 % Abschnitte mit \section, Unterabschnitte mit \subsection und
 % Unterunterabschnitte mit \subsubsection
 % -------------------------------------------------------
-\section{Einleitung}
+\section{Introduction}
+Cloud computing can offer enormous cost savings by reducing administrative effort for the customer and make use of hardware more efficiently by maximizing utilization. To achieve this increased utilization, hardware has to be shared in some form between multiple customers. In combination with the hardware flaws uncovered by the Spectre attacks and the potential for anyone to buy cloud resources, this creates an entirely new threat model for cloud applications. \\
+To investigate this problem we first discuss the technologies used in todays computation environment that play a part in Spectre attacks. Afterwards compute cloud offerings are differentiated and potential attack vectors shown. This is done through a combination of past attacks on cloud infrastructure and potential application of Spectre exploits in these scenarios to determine the associated risks. These risk remain entirely theoretical as experimental proof of such attacks is outside of the scope of this work. \\
+Finally mitigation options are discussed and some recommendations based on the findings of this work are given.
 
 % -------------------------------------------------------
 \section{Modern computation hardware and infrastructure}
@@ -102,7 +108,9 @@ Because of this multiple different PHP images can share the first two layers and
 sharing the base Debian image. Docker also adds a final non-persistent layer to the container which the application running inside uses to write files,
 which is discarded when the container is shutdown.
 \subsection{Cloud}
-
+NIST defines cloud computing as \enquote{\textelp{} a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction.} \textcite{mell2011nist}. Further more 5 essential characteristics are defined: On-demand self-service, broad network access, resource pooling, rapid   elasticity and measured service. Resource pooling is of special interest in the context of this work. \\
+Cloud resources are shared by multiple costumers in a multi-tenant model. \cite{mell2011nist} Concretely this means that tenants(customers) of a cloud platform share a server provided by the platform. This might be in form of quite direct sharing of a server by running virtual machines owned by different tenants on it. However, more abstract offerings like \ac{SaaS} databases which give the customer no direct control over an operating system will have some form of resource sharing. \\
+This results in customers having to trust not only the confidentiality of the provider itself, but also trust the isolation that separates them from potentially malicious third parties.
 % -------------------------------------------------------
 \section{Spectre}
 \subsection{Side-channels}
@@ -132,7 +140,12 @@ The attacker can now time their own access of the possible memory addresses, rev
 speculative execution, revealing the (secret) value of \lstinline|array[x]|.
 % -------------------------------------------------------
 \section{Spectre in shared cloud infrastructure}
-
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=8.5cm]{vmAndDocker.png}
+\caption{Tenant isolation in a cloud environment using a hypervisor and using Docker container isolation.}
+\label{virtmem}
+\end{figure}
 \subsection{Shared hypervisor}
 \ac{IaaS} providers give their customers, here referred to as tenants, the ability to rent virtual machines. The tenant has full access
 to this VM (root access). Since most applications do not require the full capabilities of the physical server, multiple VMs are run on a hypervisor such as VMware
@@ -162,6 +175,12 @@ by hypervisor virtualization\cite{zhang2014cross}. \\
 These providers do refer to various \enquote{Docker hardening} techniques, however, specifics like the usage of
 shared libraries between containers are not mentioned, which can provide attack surface area for Spectre exploits. \cite{retpolineTurner}
 \subsection{\acs{FaaS} -- Function as a Service}
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=8.5cm]{FaaS.png}
+\caption{\ac{FaaS} example for a Node.JS application.}
+\label{virtmem}
+\end{figure}
 \acs{FaaS} further abstracts service infrastructure. Conceptually a developer writes a function, uploads it to the \acs{FaaS} service and connects events like HTTP requests or
 database events as an input source. \\
 When an event occurs the function is called with the event's parameters and, in the case of an HTTP request, builds and
@@ -177,8 +196,11 @@ Therefore, an attacker could not only attempt co-residency to gain access to a s
 other tenants. Similar to spam phishing emails the goal would not be one large \enquote{heist} but instead gaining value from many smaller thefts.
 % -------------------------------------------------------
 \section{Prevention and detection}
-\subsection{Software/Compiler}
-\subsection{Hardware}
+\subsection{Hardware, Software and Compiler}
+While meltdown could be mitigate by operating system patches \cite{linuxKAISER}, the spectre vulnerabilities have required cooperative changes to hardware, compilers and vulnerable software itself. \\
+On the hardware side, some vulnerabilities have been removed in newer processors, others can be circumvented through new instructions that allow explicit prevention of speculative execution. \cite{intelMitigation} \\
+Compilers have been adapted to reduce the generation of code blocks that are vulnerable to some forms of spectre attack \cite{msvcQSpectre} and insert code that traps speculative execution in an endless loop \cite{retpolineTurner}. \\
+All of these changes require recompilation of programs, libraries, operating systems and drivers. Additionally all of these mitigation have some form of performance drawback and are therefore not enabled by default.
 \subsection{In-memory encryption}
 To prevent a Spectre attack from accessing secret data, the data could be encrypted in-memory. This technique however, has two weaknesses. The first issue arises from the
 fact that to make use of the encrypted data the process has to, albeit briefly, decrypt the data. This results in the data still being vulnerable, but reduces an attacker's
@@ -187,27 +209,27 @@ The second issue stems from encryption key storage. Since the key itself has to 
 encrypted data. \\
 In a shared kernel environment, e.g.\  Docker, the key can be hidden completely from the attacker by storing it outside of the victims address space. This is due to
 the limitation of Spectre, that an attack can only access memory the victim has permission to. \cite{kocher2018spectre} \\
-Therefore, when a program uses functionality like Windows' \lstinline|CryptProtectMemory| \cite{winCryptMem} the key is stored in a different processes memory or even 
+Therefore, when a program uses functionality like Windows' \lstinline|CryptProtectMemory| \cite{winCryptMem} the key is stored in a different processes memory or even
 kernel space memory. \\
-In the case of a cross VM attack in a hypervisor environment, the attacker gains access to all VM memory. This only raises the difficulty of the attack since the attacker 
+In the case of a cross VM attack in a hypervisor environment, the attacker gains access to all VM memory. This only raises the difficulty of the attack since the attacker
 has to know the location of both the encrypted secret and the decryption key.
 \subsection{Heuristic detection}
 By using CPU caches as a side-channel a Spectre attack can create a distinctive cache usage pattern which could be used to detected on going attacks. \cite{depoix2018}
 This is due to Spectre deliberately causing cache misses to flush the cache or cause speculative execution by delaying memory access. Detection in this way has the
 benefit of being easy to deploy to existing system since no changes to vulnerable software is required. \cite{depoix2018, chiappetta2016real} \\
-However since Spectre does not rely on a specific side-channel for information access \cite{kocher2018spectre} detection could be circumvented. \textcite{gruss2016flush+} 
+However since Spectre does not rely on a specific side-channel for information access \cite{kocher2018spectre} detection could be circumvented. \textcite{gruss2016flush+}
 even demonstrates a different cache side-channel that would not be detected by monitoring process cache-misses. \\
 Additionally by simply slowing down a Spectre attack it could also circumvent detection. \cite{chiappetta2016real}
 \section{Conclusion}
-\begin{itemize}
-  \item Cloud providers should provide more transparent infrastructure documentation
-  \item Physical tenant isolation already available for high security applications
-  \item Spectre attacks are difficult, Software exploits are more common and should be of higher concern
-  \item Spectre increased awareness of side channel attacks, potential for slower, hardened processors alternatives
-\end{itemize}
+Without any definite resolution of the processor inherent flaws, spectre exploits can paint a bleak picture for the future of secure computer systems. However, just like its folklore counterpart, spectre seems to have spread terror not entirely proportional to its real threat (a CVSS score of 5.6 out of 10)\cite{cveSpectre}. \\
+Today most hacking is still possible due to SQL injections \cite{magnetoSQLi}, passwords stored in plain text \cite{facebookPlainText} and even internet facing databases without any access control \cite{unistellarMongoDB}. \\
+For customers where data security is top priority, this is of course entirely insufficient. However for such applications cloud providers already offer solutions where servers are not shared with other customers. \cite{AWSDedicated} \\
+On the other hand many important discussions have begun through the large coverage of spectre. Processor companies, especially Intel though arguably disproportionately, lost costumer's trust in the security of their products, potentially opening a new market segment for slower but more secure processors for competitors. It also raised awareness of side-channels, changing the perspective of secure systems. \\
+Finally during the making of this work it became evident that cloud platform should be more transparent about their systems. Documentation should be explicit about how tenants are isolated, i.e. through containerization with docker or with a hypervisor, to allow customers to assert the risk of hardware side-channel-attacks for their systems.
+
 % --------------------------------------------------------------------
-\section*{Abkürzungen}
-\addcontentsline{toc}{section}{Abkürzungen}
+\section*{Abbreviations}
+\addcontentsline{toc}{section}{Abbreviations}
 
 % Die längste Abkürzung wird in die eckigen Klammern
 % bei \begin{acronym} geschrieben, um einen hässlichen
@@ -222,10 +244,11 @@ Additionally by simply slowing down a Spectre attack it could also circumvent de
 \acro{IPO}{input-process-output}
 \acro{MMU}{memory management unit}
 \acro{PaaS}{Platform as a Service}
+\acro{SaaS}{Software as a Service}
 \end{acronym}
 
 % Literaturverzeichnis
-\addcontentsline{toc}{section}{Literatur}
+\addcontentsline{toc}{section}{Literature}
 \printbibliography
 
 \end{document}

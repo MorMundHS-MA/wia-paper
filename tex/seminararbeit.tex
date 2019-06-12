@@ -36,7 +36,7 @@
 % Kurze Zusammenfassung des Dokuments
 \begin{abstract}
 The processor flaws used in the Spectre and Meltdown attacks have had uncharacteristically large media impact, even gaining coverage in main stream media. This is despite the fact that this type of exploit has not been used in any real world attacks and is unlikely to target consumers, as simpler attack vectors still remain highly effective. However, because Spectre affects any processor which uses speculative execution, with little hope for a \enquote{silver bullet} in the near future, Spectre seems to be here to stay. \\
-While Spectre might not very relevant to the consumer market, it is quite relevant where safety is usually paramount. The cloud promises cost reduction and safety through offloading maintenance and updating tasks to gigantic providers like Amazon's \acs{AWS}. But how secure can the most up-to-date platform be, if the used hardware is inherently flawed to the core? \\
+While Spectre might not be very relevant to the consumer market, it is quite relevant where safety is usually paramount. The cloud promises cost reduction and safety through offloading maintenance and updating tasks to gigantic providers like Amazon's \acs{AWS}. But how secure can the most up-to-date platform be, if the used hardware is inherently flawed to the core? \\
 This paper shows potential Spectre attack vectors in a shared cloud environment, discusses some defensive measures and provides a high level explanation of the Spectre attack.
 \end{abstract}
 
@@ -57,10 +57,10 @@ Finally mitigation options are discussed and some recommendations based on the f
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=8.5cm]{caches.png}
-\caption{The Intel Skylake cache hierarchy and access latencies\cite{fog2012microarchitecture}. Timings are calculated assuming a clock speed of 4 GHz for an Intel i7-6700 processor using DDR4-2400 RAM\cite{skylakeBenchmark}. }
+\caption{The Intel Skylake cache hierarchy and access latencies \cite{fog2012microarchitecture}. Timings are calculated assuming a clock speed of 4 GHz for an Intel i7-6700 processor using DDR4-2400 RAM \cite{skylakeBenchmark}. }
 \label{caches}
 \end{figure}
-Since around 1980 memory performance has not been able to keep up with the ever increasing processor speeds. \cite[p.~73]{hennessy2011computer} Because of this accessing the main memory has become a very time consuming task. Modern processors therefore try to circumvent RAM access through the use of multiple cache layers (see. \autoref{caches}). These caches have a rather limited capacity especially the very fast L1 cache (Skylake i7-6700 L1 cache 2x32KB per core, L3 cache 8MB total). \cite{skylakeBenchmark} \\
+Since around 1980 memory performance has not been able to keep up with the ever increasing processor speeds. \cite[p.~73]{hennessy2011computer} Because of this accessing the main memory has become a very time consuming task. Modern processors therefore try to circumvent RAM access through the use of multiple cache layers (see \autoref{caches}). These caches have a rather limited capacity especially the very fast L1 cache (Skylake i7-6700 L1 cache 2x32KB per core, L3 cache 8MB total). \cite{skylakeBenchmark} \\
 To optimize the usage of the available caches, various techniques are used. When code access a memory address, such as an array or string, it is very likely that addresses nearby will also be accessed (\emph{spatial locality}). Because of this memory is loaded into the caches in blocks to reduce cache misses in these cases. \cite[p.~74]{hennessy2011computer}. \\
 
 \subsection{Processor pipelines and speculative execution}
@@ -80,12 +80,12 @@ This process is called speculative execution. \cite{kocher2018spectre}
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=8.5cm]{virtMem.png}
-\caption{Mapping of virtual memory to physical memory. }
+\caption{Mapping of virtual memory to physical memory. \cite{tanenbaum1997operating}}
 \label{virtmem}
 \end{figure}
 Running multiple programs in parallel is a operating system \enquote{feature} that has been the standard for around 30 years. Before that some operating systems would run only one program at a time or completely swap out the main memory when switching to a different running process. \cite{tanenbaum1997operating} This method is obviously not very efficient at handling many processes at once. Today, virtual memory is the primary way of managing memory. When using virtual memory every process has it own separate address space. This means two processes can store different data at the same address without being able to affect each other. \cite[p.~620]{hennessy2011computer}\\
 The virtual address space of each process is divided into memory blocks called pages (currently on x86 computers page size is 4kB). When a process accesses an address, the virtual page address is translated by the \ac{MMU} to a physical page address or, when the page is not loaded into memory, gets loaded into memory by the OS. \\
-While virtual memory allows reuse of the same virtual address by multiple processes, it also allows sharing of physical memory between processes. This can be used for inter process communication and also as an optimization to share identical code between programs. Shared libraries are loaded once and can be reused by any program that uses the same library version. \cite{tanenbaum1997operating} To prevent programs from changing the library code for other programs, a copy on write mechanism is used. When a process attempts to write to a shared library page, it is copied in physical memory and the virtual address gets remapped to the copied version.
+While virtual memory allows reuse of the same virtual address by multiple processes, it also allows sharing of physical memory between processes. This can be used for inter process communication and also as an optimization to share identical code between programs. Shared libraries are loaded once and can be reused by any program that uses the same library version. \cite{tanenbaum1997operating} To prevent programs from changing the library code for other programs, a copy on write mechanism is used. When a process attempts to write to a shared library page, it is copied in physical memory and the virtual address gets remapped to the copied version. \cite[p.~295]{bovet2005understanding}
 \subsection{Docker}
 \subsubsection*{Containerization concept}
 Docker allows isolation of programs in containers. These containers hide other processes running on the host and provide the process with its own virtual filesystem
@@ -102,13 +102,13 @@ To reduce redundancy docker images are divided into layers. \cite{dockerBestPrac
 major layers. The first contains a minimal debian image providing basic libraries and tools. The second layer contains Apache and its dependencies. The final
 layer would then have a copy of the applications PHP source files. \\
 When a container is started from this image, the layers are stacked on top of each other
-using a union filesystem like OverlayFS\cite{overlayfs}. Whenever the application attempts to read a file, the kernel checks each layer from top to bottom
+using a union filesystem like OverlayFS \cite{overlayfs}. Whenever the application attempts to read a file, the kernel checks each layer from top to bottom
 returning the first result. This allows overriding of files on lower layers. \\
 Because of this multiple different PHP images can share the first two layers and a MySQL image
 sharing the base Debian image. Docker also adds a final non-persistent layer to the container which the application running inside uses to write files,
 which is discarded when the container is shutdown.
 \subsection{Cloud}
-NIST defines cloud computing as \enquote{\textelp{} a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction.} \textcite{mell2011nist}. Further more 5 essential characteristics are defined: On-demand self-service, broad network access, resource pooling, rapid   elasticity and measured service. Resource pooling is of special interest in the context of this work. \\
+\ac{NIST} defines cloud computing as \enquote{\textelp{} a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction.} \textcite{mell2011nist}. Further more 5 essential characteristics are defined: On-demand self-service, broad network access, resource pooling, rapid   elasticity and measured service. Resource pooling is of special interest in the context of this work. \\
 Cloud resources are shared by multiple costumers in a multi-tenant model. \cite{mell2011nist} Concretely this means that tenants (customers) of a cloud platform share a server provided by the platform. This might be in form of quite direct sharing of a server by running virtual machines owned by different tenants on it. However, more abstract offerings like \ac{SaaS} databases, which give the customer no direct control over an operating system, will have some form of resource sharing. \\
 This results in customers having to trust not only the confidentiality of the provider itself, but also trust the isolation that separates them from potentially malicious third parties.
 % -------------------------------------------------------
@@ -123,7 +123,7 @@ of various cryptographic algorithms. \cite{bernstein2005cache}\cite{kocher1996ti
 Similarly even a systems power consumption can be used as a side-channel to retrieve secret data. \cite{kocher1999differential} \\
 While these two side-channels can add unintended output to a process they are within the programmers control. Execution time can be increased arbitrarily through
 idling or sleeping and the system's power consumption can be increased by running pointless code. Other side-channels however, are completely outside of the
-control of the programmer. For example a program has very limited or no direct control over the systems cache state or which \ac{ALU} will compute a calculation.
+control of the programmer. For example a program has very limited or no direct control over the systems cache state or which \ac{ALU} will compute a calculation. \cite{kocher2018spectre}
 \subsection{Exploiting speculative execution}
 To execute a Spectre exploit the attacker first has to find a vulnerable instruction sequence in the victim program. The sequence will leak secret data into the chosen
 side-channel during speculative execution. Therefore, Spectre-style attacks can be differentiated from each other by the how speculative execution is achieved
@@ -147,7 +147,7 @@ While the direct results of the speculative execution are discarded, the attacke
 \ac{IaaS} providers give their customers, here referred to as tenants, the ability to rent virtual machines. The tenant has full access
 to this VM (root access). Since most applications do not require the full capabilities of the physical server, multiple VMs are run on a hypervisor such as VMware
 ESXi or Linux's KVM. \\
-This results in the sharing of physical resources like RAM and CPU cores between tenants. This isolation is hardware enforced and hypervisor exploits are quite rare (only 5 ESXi vulnerabilities in 2018 with a score $\ge$ 5) \cite{esxiVulnerabilities}. \\
+This results in the sharing of physical resources like RAM and CPU cores between tenants. This isolation is hardware enforced and hypervisor exploits are quite rare (only 5 ESXi vulnerabilities in 2018 with a \ac{CVSS} score $\ge$ 5) \cite{esxiVulnerabilities}. \\
 However, since speculative execution can circumvent hardware enforced checks, some Spectre vulnerabilities allowed an attacker to read the memory of other tenants virtual machines and the hypervisor itself \cite{vmwareSpectre, vmwareSpectreNG}. \\
 While the currently known Spectre attacks have been mitigated by hypervisor patches, speculative execution exploits found in the future could still allow cross VM attacks in the cloud. \\
 In a public cloud an adversary is faced with another hurdle besides VM isolation. Because the \ac{IaaS} provider allocates resources for the tenants based on the their requirements through a closed-source algorithm, an attacker can not directly force co-residency (share a hypervisor) with the victim. \\
@@ -159,11 +159,11 @@ because of the reduced overhead. \\
 However, leveraging these benefits requires faith in the process isolation provided by Docker and the Linux kernel. Because of this the Azure and \ac{AWS} public
 cloud isolate containers using hypervisor technology, only sharing kernels between containers of the same user defined application group
 \cite{fargateIsolation, azureIsolation}. Due to this the
-potential price advantage is lost. The smallest possible \ac{AWS} Fargate task configuration (0.25 vCPU and 0.5 GB RAM) costs 0.01234 USD per hour\cite{fargatePricing}
+potential price advantage is lost. The smallest possible \ac{AWS} Fargate task configuration (0.25 vCPU and 0.5 GB RAM) costs 0.01234 USD per hour \cite{fargatePricing}
 while the EC2 t3.micro VM (2 vCPU and 1 GB RAM) only costs 0.0104 USD per hour \cite{ec2Pricing}. \\
 Other \ac{PaaS} providers like
-Heroku\cite{herokuIsolation}, OpenShift\cite{openshiftIsolation} and the defunct DotCloud however, do not use the additional isolation provided
-by hypervisor virtualization\cite{zhang2014cross}. \\
+Heroku \cite{herokuIsolation}, OpenShift \cite{openshiftIsolation} and the defunct DotCloud however, do not use the additional isolation provided
+by hypervisor virtualization \cite{zhang2014cross}. \\
 These providers do refer to various \enquote{Docker hardening} techniques, however, specifics like the usage of
 shared libraries between containers are not mentioned, which can provide attack surface area for Spectre exploits. \cite{retpolineTurner}
 \subsection{\acs{FaaS} -- Function as a Service}
@@ -180,8 +180,8 @@ returns a API response. The benefits are automatic scaling and a payment model w
 In reality a \enquote{function} is a package of code, configuration and module/library files. Therefore, even if the service for example only allows Node.JS execution
 this cannot be considered a security feature as a node module can contain native, compiled binary files. \cite{lambdaFaq} \\
 Due to the high abstraction level, internal implementation details are sparsely documented. \ac{AWS} Lambda notes that Lambda functions are isolated using EC2 techniques, i.e.
-hypervisor isolation\cite{lambdaFaq}. \ac{GCF} in contrast only states that functions are run in
-\enquote{its own isolated secure execution context}\cite{cloudFunc}. \textcite{wang2018peeking} further investigates \acs{FaaS} implementations. \\
+hypervisor isolation \cite{lambdaFaq}. \ac{GCF} in contrast only states that functions are run in
+\enquote{its own isolated secure execution context} \cite{cloudFunc}. \textcite{wang2018peeking} further investigates \acs{FaaS} implementations. \\
 If a \acs{FaaS} would only use docker to isolate functions of different customers, the risk of a speculative attack would be higher compared to a Docker \ac{PaaS} provider. Since function are based on small number of available runtime environments (e.g.\ \ac{GCF}: Go, Python and Node.js 6,8,10) \cite{cloudFunc} an attacker has implicit knowledge
 about the victims shared library and executable files. \\
 Therefore, an attacker could not only attempt co-residency to gain access to a specific target's secrets, but instead mount a broader attack acquiring data from random
@@ -213,7 +213,7 @@ However since Spectre does not rely on a specific side-channel for information a
 even demonstrates a different cache side-channel that would not be detected by monitoring process cache-misses. \\
 Additionally by simply slowing down a Spectre attack it could also circumvent detection. \cite{chiappetta2016real}
 \section{Conclusion}
-Without any definite resolution of the processor inherent flaws in the near future, Spectre exploits can paint a bleak picture for the future of secure computer systems. However, just like its folklore counterpart, Spectre seems to have spread terror not entirely proportional to its real threat (a CVSS score of 5.6 out of 10)\cite{cveSpectre}. \\
+Without any definite resolution of the processor inherent flaws in the near future, Spectre exploits can paint a bleak picture for the future of secure computer systems. However, just like its folklore counterpart, Spectre seems to have spread terror not entirely proportional to its real threat (a \ac{CVSS} score of 5.6 out of 10) \cite{cveSpectre}. \\
 Today most data breaches are still possible through simple software flaws like SQL injections \cite{magnetoSQLi}, passwords stored in plain text \cite{facebookPlainText} and even internet facing databases without any access control \cite{unistellarMongoDB}. \\
 But for customers for whom data security is top priority, all possible approaches have to be considered. However, for such applications cloud providers already offer solutions where servers are not shared with other customers. \cite{AWSDedicated} \\
 On the other hand many important discussions have begun because of the broad interest in Spectre. Processor manufactures, especially Intel though arguably disproportionately, lost costumer's trust in the security of their products, potentially opening a new market segment for slower but more secure processors to competitors. It also raised awareness of side-channels, changing the perspective of secure systems. \\
@@ -230,11 +230,13 @@ Lastly, during the making of this work it became evident that cloud platform sho
 \begin{acronym}[IaaS]
 \acro{ALU}{arithmetic logic unit}
 \acro{AWS}{Amazon Web Services}
+\acro{CVSS}{Common Vulnerability Scoring System}
 \acro{FaaS}{Function as a Service}
 \acro{GCF}{Google Cloud Functions}
 \acro{IaaS}{Infrastructure as a Service}
 \acro{IPO}{input-process-output}
 \acro{MMU}{memory management unit}
+\acro{NIST}{National Institute of Standards and Technology}
 \acro{PaaS}{Platform as a Service}
 \acro{SaaS}{Software as a Service}
 \end{acronym}

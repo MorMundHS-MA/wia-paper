@@ -35,9 +35,10 @@
 
 % Kurze Zusammenfassung des Dokuments
 \begin{abstract}
-The processor flaws used in the Spectre and Meltdown attacks have had uncharacteristically large media impact, even gaining coverage in main stream media. This is despite the fact that this type of exploit has not been used in any real world attacks and is unlikely to target consumers, as simpler attack vectors still remain highly effective. However, because Spectre affects any processor which uses speculative execution, with little hope for a \enquote{silver bullet} in the near future, Spectre seems to be here to stay. \\
-While Spectre might not be very relevant to the consumer market, it is quite relevant where safety is usually paramount. The cloud promises cost reduction and safety through offloading maintenance and updating tasks to gigantic providers like Amazon's \acs{AWS}. But how secure can the most up-to-date platform be, if the used hardware is inherently flawed to the core? \\
-This paper shows potential Spectre attack vectors in a shared cloud environment, discusses some defensive measures and provides a high level explanation of the Spectre attack.
+The processor flaws used in the Spectre and Meltdown attacks have had uncharacteristically large media impact, even gaining coverage in main-stream media. This is despite the fact that this type of exploit has not been used in any real world attacks and is unlikely to target consumers, as simpler attack vectors still remain highly effective. However, because Spectre affects any processor which uses speculative execution, with little hope for a \enquote{silver bullet} in the near future, Spectre seems to be here to stay. \\
+While Spectre might not be very relevant to the consumer market, it is quite relevant where safety is usually paramount: the cloud. \\ 
+It promises cost reduction and safety through offloading maintenance and updating tasks to gigantic providers like Amazon's \acs{AWS}. But how secure can the most up-to-date platform be, if the used hardware is inherently flawed to the core? \\
+This paper provides a high level explanation of the Spectre attack, shows potential Spectre attack vectors in a shared cloud environment and discusses some defensive measures.
 \end{abstract}
 
 % Inhaltsverzeichnis erzeugen
@@ -47,8 +48,8 @@ This paper shows potential Spectre attack vectors in a shared cloud environment,
 % Unterunterabschnitte mit \subsubsection
 % -------------------------------------------------------
 \section{Introduction}
-Cloud computing can offer enormous cost savings by reducing administrative effort for the customer and make use of hardware more efficiently by maximizing utilization. To achieve this increased utilization, hardware has to be shared in some form between multiple customers. \cite{mell2011nist} In combination with the hardware flaws uncovered by the Spectre attacks and the potential for anyone to buy cloud resources, this creates an entirely new threat model for cloud applications. \\
-To investigate this problem we first discuss the technologies used in todays computation environment that play a part in Spectre attacks. Afterwards compute cloud offerings are differentiated and potential attack vectors shown. This is done through a combination of reviewing past attacks on cloud infrastructure and potential application of Spectre exploits in these scenarios to determine the associated risks. These risks remain entirely theoretical as experimental proof of such attacks is outside of the scope of this work. \\
+Cloud computing can offer enormous cost savings by reducing administrative effort for the customer and making use of hardware more efficiently by maximizing utilization. To achieve this increased utilization, hardware has to be shared in some form between multiple customers. \cite{mell2011nist} In combination with the hardware flaws uncovered by the Spectre attacks and the potential for anyone to buy cloud resources, this creates an entirely new threat model for cloud applications. \\
+To investigate this problem we first discuss the technologies used in today's computation environment that play a part in Spectre attacks. Afterwards compute cloud offerings are differentiated and potential attack vectors shown. This is done through a combination of reviewing past attacks on cloud infrastructure and potential application of Spectre exploits in these scenarios to determine the associated risks. These risks remain entirely theoretical as experimental proof of such attacks is outside of the scope of this work. \\
 Finally mitigation options are discussed and some recommendations based on the findings of this work are given.
 
 % -------------------------------------------------------
@@ -61,20 +62,20 @@ Finally mitigation options are discussed and some recommendations based on the f
 \label{caches}
 \end{figure}
 Since around 1980 memory performance has not been able to keep up with the ever increasing processor speeds. \cite[p.~73]{hennessy2011computer} Because of this accessing the main memory has become a very time consuming task. Modern processors therefore try to circumvent RAM access through the use of multiple cache layers (see \autoref{caches}). These caches have a rather limited capacity especially the very fast L1 cache (Skylake i7-6700 L1 cache 2x32KB per core, L3 cache 8MB total). \cite{skylakeBenchmark} \\
-To optimize the usage of the available caches, various techniques are used. When code access a memory address, such as an array or string, it is very likely that addresses nearby will also be accessed (\emph{spatial locality}). Because of this memory is loaded into the caches in blocks to reduce cache misses in these cases. \cite[p.~74]{hennessy2011computer}. \\
+To optimize the usage of the available caches, various techniques are used. When code accesses a memory address, such as an array or string, it is very likely that addresses nearby will also be accessed (\emph{spatial locality}). Because of this, memory is loaded into the caches in blocks to reduce cache misses in these cases. \cite[p.~74]{hennessy2011computer}. \\
 
 \subsection{Processor pipelines and speculative execution}
 Since the turn of the millennium, clock speeds of high performance CPUs have stagnated because the increased energy consumption and resulting heat generation got
-too high. \cite{fog2012microarchitecture} Multi-core architectures became common however even today many, if not most,
+too high. \cite{fog2012microarchitecture} Multi-core architectures became common, however even today many, if not most,
 workloads rely heavily on single thread performance. Therefore, to increase the speed of single thread execution, without increasing the clock speed,
 more instructions have to be executed in a single cycle. To achieve this goal many techniques like instruction splitting, fusion,
 and simultaneous instruction execution are used. \cite{fog2012microarchitecture} These optimizations require more complex processing of the instruction stream which
-is handled by the processors instruction pipeline. This has resulted in higher pipeline memory requirements as well as a longer pipelines in terms of clock cycles
+is handled by the processors instruction pipeline. This has resulted in higher pipeline memory requirements as well as a longer pipeline in terms of clock cycles
 required for an instruction to complete execution. However, since programs use conditional branches and loops these long pipeline can become invalid because the CPU
 cannot know the destination of a conditional jump without first evaluating the condition. This results in a pipeline flush that wastes valuable execution time while
-the pipeline is refilled. To mitigate the impact of this issue the processor can store previous outcomes of branches and use this to predict future executions of the
+the pipeline has to be refilled. To mitigate the impact of this issue the processor can store previous outcomes of branches and use this to predict future executions of the
 branch. With branch prediction only a miss-prediction will result in a pipeline flush. The CPU runs the instruction of the predicted branch and either commits
-the results if the prediction was correct or discards them if was not.
+the results if the prediction was correct or discards them if it was not.
 This process is called speculative execution. \cite{kocher2018spectre}
 \subsection{Virtual and shared memory}
 \begin{figure}[!ht]
@@ -83,12 +84,12 @@ This process is called speculative execution. \cite{kocher2018spectre}
 \caption{Mapping of virtual memory to physical memory. \cite{tanenbaum1997operating}}
 \label{virtmem}
 \end{figure}
-Running multiple programs in parallel is a operating system \enquote{feature} that has been the standard for around 30 years. Before that some operating systems would run only one program at a time or completely swap out the main memory when switching to a different running process. \cite{tanenbaum1997operating} This method is obviously not very efficient at handling many processes at once. Today, virtual memory is the primary way of managing memory. When using virtual memory every process has it own separate address space. This means two processes can store different data at the same address without being able to affect each other. \cite[p.~620]{hennessy2011computer}\\
-The virtual address space of each process is divided into memory blocks called pages (currently on x86 computers page size is 4kB). When a process accesses an address, the virtual page address is translated by the \ac{MMU} to a physical page address or, when the page is not loaded into memory, gets loaded into memory by the OS. \\
+Running multiple programs in parallel is a operating system \enquote{feature} that has been the standard for around 30 years. Before that some operating systems would run only one program at a time or completely swap out the main memory when switching to a different running process. \cite{tanenbaum1997operating} This method is obviously not very efficient at handling many processes at once. Today, virtual memory is the primary way of managing memory. When using virtual memory every process has it own separate address space. This means two processes can store different data at the same virtual address without being able to affect each other. \cite[p.~620]{hennessy2011computer}\\
+The virtual address space of each process is divided into memory blocks called pages (currently on x86 computers page size is 4kB). When a process accesses an address, the virtual page address is translated by the \ac{MMU} to a physical frame address or, when the page is not loaded into memory, gets loaded into memory by the OS. \\
 While virtual memory allows reuse of the same virtual address by multiple processes, it also allows sharing of physical memory between processes. This can be used for inter process communication and also as an optimization to share identical code between programs. Shared libraries are loaded once and can be reused by any program that uses the same library version. \cite{tanenbaum1997operating} To prevent programs from changing the library code for other programs, a copy on write mechanism is used. When a process attempts to write to a shared library page, it is copied in physical memory and the virtual address gets remapped to the copied version. \cite[p.~295]{bovet2005understanding}
 \subsection{Docker}
 \subsubsection*{Containerization concept}
-Docker allows isolation of programs in containers. These containers hide other processes running on the host and provide the process with its own virtual filesystem
+Docker allows the isolation of programs in containers. These containers hide other processes running on the host and provide the process with its own virtual filesystem
 and network. This means containers only share the hosts kernel which stands in contrast with classical VMs which have to run a separate OS for
 each virtual machine. \cite{bernstein2014containers}\\
 To create a container an image is used. The image contains all required files and serves as a \enquote{blueprint} for the container. \cite{bernstein2014containers}
@@ -106,9 +107,9 @@ using a union filesystem like OverlayFS \cite{overlayfs}. Whenever the applicati
 returning the first result. This allows overriding of files on lower layers. \\
 Because of this multiple different PHP images can share the first two layers and a MySQL image
 sharing the base Debian image. Docker also adds a final non-persistent layer to the container which the application running inside uses to write files,
-which is discarded when the container is shutdown.
+which is discarded when the container is shut down.
 \subsection{Cloud}
-\ac{NIST} defines cloud computing as \enquote{\textelp{} a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction.} \textcite{mell2011nist}. Further more 5 essential characteristics are defined: On-demand self-service, broad network access, resource pooling, rapid   elasticity and measured service. Resource pooling is of special interest in the context of this work. \\
+\ac{NIST} defines cloud computing as \enquote{\textelp{} a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction.} \cite{mell2011nist}. Further more 5 essential characteristics are defined: On-demand self-service, broad network access, resource pooling, rapid   elasticity and measured service. Resource pooling is of special interest in the context of this work. \\
 Cloud resources are shared by multiple costumers in a multi-tenant model. \cite{mell2011nist} Concretely this means that tenants (customers) of a cloud platform share a server provided by the platform. This might be in form of quite direct sharing of a server by running virtual machines owned by different tenants on it. However, more abstract offerings like \ac{SaaS} databases, which give the customer no direct control over an operating system, will have some form of resource sharing. \\
 This results in customers having to trust not only the confidentiality of the provider itself, but also trust the isolation that separates them from potentially malicious third parties.
 % -------------------------------------------------------
@@ -120,7 +121,7 @@ However in real life systems, processes can produce additional outputs which are
 factorial of a number takes longer proportional to the input number. An attacker could therefore, infer the input number from the execution time without knowing the
 result. More complex timing-attacks have been used to extract private keys or other secrets
 of various cryptographic algorithms. \cite{bernstein2005cache}\cite{kocher1996timing}
-Similarly even a systems power consumption can be used as a side-channel to retrieve secret data. \cite{kocher1999differential} \\
+Similarly even a system's power consumption can be used as a side-channel to retrieve secret data. \cite{kocher1999differential} \\
 While these two side-channels can add unintended output to a process they are within the programmers control. Execution time can be increased arbitrarily through
 idling or sleeping and the system's power consumption can be increased by running pointless code. Other side-channels however, are completely outside of the
 control of the programmer. For example a program has very limited or no direct control over the systems cache state or which \ac{ALU} will compute a calculation. \cite{kocher2018spectre}
@@ -134,7 +135,7 @@ if (x < array1_size)
 \end{lstlisting}
 Variant 1 of the original Spectre attack uses conditional branches to achieve speculative execution and leaks data through the processors cache state. The conditional branch is an array bounds check \lstinline|if (x < array1_size)|. The branch prediction can be miss-trained by repeatedly calling the victim function with an in-bounds \lstinline|x|, causing it to predict the branch as true in the future. Then the attacker flushes \lstinline|array1_size| from the processors cache and calls the victim function again. This causes the branch to be execute speculatively until \lstinline|array1_size| is retrieved from memory. \\
 To leak the victims secret the attacker chooses an \lstinline|x| that is out of bounds. The victim now reads from \lstinline|array1| using the malicious, out-of-bounds address. To successfully execute the attack sequence the victim also has to use the result to access a second array. This causes the processor to load a memory address into the cache which is based of the previous out-of-bounds access of \lstinline|array[x]|. \\
-While the direct results of the speculative execution are discarded, the attacker can now time their own access of the possible memory addresses of \lstinline|array2|, revealing which address can be read fastest and was therefore retrieved by the victims speculative execution, revealing the (secret) value of \lstinline|array[x]|.
+While the direct results of the speculative execution are discarded, the attacker can now measure their own access time of the possible memory addresses of \lstinline|array2|, revealing which address can be read fastest and was therefore retrieved by the victims speculative execution, revealing the (secret) value of \lstinline|array[x]|.
 % -------------------------------------------------------
 \section{Spectre in shared cloud infrastructure}
 \begin{figure}[!ht]
@@ -151,13 +152,13 @@ This results in the sharing of physical resources like RAM and CPU cores between
 However, since speculative execution can circumvent hardware enforced checks, some Spectre vulnerabilities allowed an attacker to read the memory of other tenants virtual machines and the hypervisor itself \cite{vmwareSpectre, vmwareSpectreNG}. \\
 While the currently known Spectre attacks have been mitigated by hypervisor patches, speculative execution exploits found in the future could still allow cross VM attacks in the cloud. \\
 In a public cloud an adversary is faced with another hurdle besides VM isolation. Because the \ac{IaaS} provider allocates resources for the tenants based on the their requirements through a closed-source algorithm, an attacker can not directly force co-residency (share a hypervisor) with the victim. \\
-\textcite{Ristenpart:2009:HYG:1653662.1653687} demonstrated various networking based techniques to achieve co-residency in the early (2009) \ac{AWS} cloud and while Amazon has improved security in this regard, other co-residency detection mechanisms have been found \cite{inci2015seriously}. This newer method uses information leaks on the processor level, specifically through the last level cache shared between all CPU cores.
+\textcite{ristenpart2009hey} demonstrated various networking based techniques to achieve co-residency in the early (2009) \ac{AWS} cloud and while Amazon has improved security in this regard, other co-residency detection mechanisms have been found \cite{inci2015seriously}. This newer method uses information leaks on the processor level, specifically through the last level cache shared between all CPU cores.
 \subsection{Shared Docker host}
 Running docker containers in the cloud can have benefits for both the customer and the cloud provider. The customer does not have to worry about maintenance
 of the underlying operating system and can more easily scale their application. The cloud provider can, in theory, increase utilization of their hardware
 because of the reduced overhead. \\
 However, leveraging these benefits requires faith in the process isolation provided by Docker and the Linux kernel. Because of this the Azure and \ac{AWS} public
-cloud isolate containers using hypervisor technology, only sharing kernels between containers of the same user defined application group
+cloud are using hypervisor technology to isolate containers, only sharing kernels between containers of the same user defined application group
 \cite{fargateIsolation, azureIsolation}. Due to this the
 potential price advantage is lost. The smallest possible \ac{AWS} Fargate task configuration (0.25 vCPU and 0.5 GB RAM) costs 0.01234 USD per hour \cite{fargatePricing}
 while the EC2 t3.micro VM (2 vCPU and 1 GB RAM) only costs 0.0104 USD per hour \cite{ec2Pricing}. \\
@@ -176,7 +177,7 @@ shared libraries between containers are not mentioned, which can provide attack 
 \acs{FaaS} further abstracts service infrastructure. Conceptually a developer writes a function, uploads it to the \acs{FaaS} service and connects events like HTTP requests or
 database events as an input source. \\
 When an event occurs the function is called with the event's parameters and, in the case of an HTTP request, builds and
-returns a API response. The benefits are automatic scaling and a payment model where the customer only pays for the functions execution time. \cite{lambdaFeatures}\\
+returns a API response. The benefits are automatic scaling and a payment model where the customer only pays for the function's execution time. \cite{lambdaFeatures}\\
 In reality a \enquote{function} is a package of code, configuration and module/library files. Therefore, even if the service for example only allows Node.JS execution
 this cannot be considered a security feature as a node module can contain native, compiled binary files. \cite{lambdaFaq} \\
 Due to the high abstraction level, internal implementation details are sparsely documented. \ac{AWS} Lambda notes that Lambda functions are isolated using EC2 techniques, i.e.
@@ -206,7 +207,7 @@ kernel space memory. \\
 In the case of a cross VM attack in a hypervisor environment, the attacker gains access to all VM memory. This only raises the difficulty of the attack since the attacker
 has to know the location of both the encrypted secret and the decryption key.
 \subsection{Heuristic detection}
-By using CPU caches as a side-channel a Spectre attack can create a distinctive cache usage pattern which could be used to detected on going attacks. \cite{depoix2018}
+By using CPU caches as a side-channel a Spectre attack can create a distinctive cache usage pattern which could be used to detected ongoing attacks. \cite{depoix2018}
 This is due to Spectre deliberately causing cache misses to flush the cache or cause speculative execution by delaying memory access. Detection in this way has the
 benefit of being easy to deploy to existing system since no changes to vulnerable software is required. \cite{depoix2018, chiappetta2016real} \\
 However since Spectre does not rely on a specific side-channel for information access \cite{kocher2018spectre} detection could be circumvented. \textcite{gruss2016flush+}
@@ -227,7 +228,7 @@ Lastly, during the making of this work it became evident that cloud platform sho
 % bei \begin{acronym} geschrieben, um einen hässlichen
 % Umbruch zu verhindern
 % Sie müssen die Abkürzungen selbst alphabetisch sortieren!
-\begin{acronym}[IaaS]
+\begin{acronym}[MMU]
 \acro{ALU}{arithmetic logic unit}
 \acro{AWS}{Amazon Web Services}
 \acro{CVSS}{Common Vulnerability Scoring System}
